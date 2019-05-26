@@ -11,12 +11,8 @@ const contractUtil = {
         if (!acountAddr) {
             return;
         } 
-        await web3.eth.getBalance(acountAddr,(err,bal)=> {
-            if (!err) {
-                return bal;
-            }
-        });
-        return;
+        const balance = await web3.eth.getBalance(acountAddr);
+        return balance;
     },
     getContract: async (abi,contractAddr) => {
         if (!abi || !contractAddr || !value) {
@@ -33,7 +29,7 @@ const contractUtil = {
         return accounts;
     },
     transfer: async (fromAddr,fromPassword, toAddr, value) => {
-        if (!fromAddr || !toAddr || !value) {
+        if (!fromAddr|| !fromAddr || !toAddr || !value) {
             return;
         } 
         const transactionData = {
@@ -48,7 +44,11 @@ const contractUtil = {
         if (!unlock) {
             return;
         }
+        console.log("account unlock")
         const result = await web3.eth.sendTransaction(transactionData);
+        console.log("get result")
+        await web3.eth.personal.lockAccount(fromAddr);
+        console.log("account lock")
         return result;
        
     },

@@ -1,22 +1,18 @@
-// var express = require('express');
-// var router = express.Router();
 import { Router } from 'express';
 import ContractRoute from './ContractRoute';
-import BetMinimunRoute from './BetMinimunRoute';
+import betMinimunRoute from './betMinimunRoute';
 
 /* GET home page. */
 
-module.exports = router;
-export default (passport) => {
-	const root = Router();
-	const api = Router();
+const root = Router();
+const api = Router();
 
-	router.get('/', (req, res, next) => {
-    res.render('index', { title: 'Express' });
-  });
+root.get('/', (req, res, next) => {
+  res.render('index', { title: 'Express' });
+});
 
-	api.use('/ContractRoute', ContractRoute);
-	api.use('/BetMinimunRoute', BetMinimunRoute);
+api.use('/contract', ContractRoute);
+api.use('/game', betMinimunRoute);
+root.use('/api', api);
 
-	return root;
-};
+module.exports = root;

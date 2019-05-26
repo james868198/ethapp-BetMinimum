@@ -3,8 +3,6 @@ import contractController from '../controllers/contractController';
 
 const router = Router();
 
-
-
 router.route('/')
 	.get(contractController.getAccountList)
 router.route('/:address')
