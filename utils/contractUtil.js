@@ -50,7 +50,6 @@ const contractUtil = {
         await web3.eth.personal.lockAccount(fromAddr);
         console.log("account lock")
         return result;
-       
     },
 };
 
