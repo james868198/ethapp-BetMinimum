@@ -9,6 +9,7 @@ let pendingBets = 0;
 let betData = {}; // [address]: data
 let playedMap = {};
 let amountMap = {};
+const gameRecords = [];
 
 function newBetJob(params) {
     const job = jobs.create('bet', params);
@@ -88,6 +89,15 @@ jobs.process('distribute', async (job, done) => {
 });
 
 const controller = {
+    getPrevGame: (_, res) => {
+        console.log('[betMiniminController][getPrevGame]');
+        return res.json({
+            status: SUCCESS,
+            prevGame: gameRecords.length
+                ? gameRecords[gameRecords.length - 1]
+                : null
+        });
+    },
     getGameStatus: async (req, res) => {
         console.log('[betMiniminController][getGameStatus]');
 
@@ -99,6 +109,8 @@ const controller = {
                 const contract = await BetMinimun.getBetMinimun();
                 const data = await BetMinimun.getGameData(contract);
                 if (!data) throw new Error('no data');
+
+                gameRecords.push(data);
 
                 result.status = SUCCESS;
                 result.gameData = data;
