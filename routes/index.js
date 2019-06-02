@@ -1,18 +1,14 @@
 import { Router } from 'express';
-import ContractRoute from './ContractRoute';
+import contractRoute from './contractRoute';
 import betMinimunRoute from './betMinimunRoute';
 
-/* GET home page. */
+const router = Router();
+const apiRouter = Router();
 
-const root = Router();
-const api = Router();
+router.get('/', (_, res) => res.render('index', { title: 'Express' }));
 
-root.get('/', (req, res, next) => {
-  res.render('index', { title: 'Express' });
-});
+apiRouter.use('/contract', contractRoute);
+apiRouter.use('/game', betMinimunRoute);
+router.use('/api', apiRouter);
 
-api.use('/contract', ContractRoute);
-api.use('/game', betMinimunRoute);
-root.use('/api', api);
-
-module.exports = root;
+module.exports = router;
