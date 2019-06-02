@@ -10,7 +10,7 @@ const controller = {
             result.status = SUCCESS;
             result.data = list;
         } catch (error) {
-            console.error(`error: ${error})`);
+            console.error(`error: ${error.message})`);
         }
         return res.json(result);
     },
@@ -24,7 +24,7 @@ const controller = {
                 result.status = SUCCESS;
                 result.balance = balance;
             } catch (error) {
-                console.error(`error: ${error})`);
+                console.error(`error: ${error.message})`);
             }
         }
         return res.json(result);
@@ -50,7 +50,7 @@ const controller = {
                 result.status = SUCCESS;
                 result.transaction = transaction;
             } catch (error) {
-                console.error(`error: ${error})`);
+                console.error(`error: ${error.message})`);
             }
         }
         return res.json(result);

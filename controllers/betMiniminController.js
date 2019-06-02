@@ -14,7 +14,7 @@ const controller = {
             result.status = SUCCESS;
             result.gameData = data;
         } catch (error) {
-            console.error(`error: ${error})`);
+            console.error(`error: ${error.message})`);
         }
 
         return res.json(result);
@@ -34,7 +34,7 @@ const controller = {
                 result.status = SUCCESS;
                 result.played = played;
             } catch (error) {
-                console.error(`error: ${error})`);
+                console.error(`error: ${error.message})`);
             }
         }
         return res.json(result);
@@ -79,7 +79,7 @@ const controller = {
                 result.status = SUCCESS;
                 result.data = transaction;
             } catch (error) {
-                console.error(`error: ${error})`);
+                console.error(`error: ${error.message})`);
             }
         }
         return res.json(result);
@@ -103,7 +103,7 @@ const controller = {
                 result.status = SUCCESS;
                 result.data = transaction;
             } catch (error) {
-                console.error(`error: ${error})`);
+                console.error(`error: ${error.message})`);
             }
         }
         return res.json(result);
