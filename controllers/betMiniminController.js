@@ -88,8 +88,25 @@ jobs.process('distribute', async (job, done) => {
 });
 
 const controller = {
-    getGameStatus: (_, res) => {
+    getGameStatus: async (req, res) => {
         console.log('[betMiniminController][getGameStatus]');
+
+        const { awaiting = false } = req.params;
+
+        if (awaiting && pendingBets <= 0) {
+            const result = {};
+            try {
+                const contract = await BetMinimun.getBetMinimun();
+                const data = await BetMinimun.getGameData(contract);
+                if (!data) throw new Error('no data');
+
+                result.status = SUCCESS;
+                result.gameData = data;
+            } catch (error) {
+                result.status = FAIL;
+            }
+            return res.json(result);
+        }
 
         const total = Object.values(amountMap).reduce(
             (sum, amount) => sum + amount,
