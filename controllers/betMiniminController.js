@@ -19,8 +19,8 @@ const controller = {
 
         return res.json(result);
     },
-    getAccountStatus: async (req, res) => {
-        console.log('[betMiniminController][getAccountStatus]');
+    getBetStatus: async (req, res) => {
+        console.log('[betMiniminController][getBetStatus]');
 
         const { address } = req.params;
         const result = { status: FAIL };
