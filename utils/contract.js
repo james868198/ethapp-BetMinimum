@@ -48,11 +48,11 @@ const contractUtil = {
         if (!unlock) {
             return;
         }
-        console.log('account unlock');
+        console.log('<transfer> account unlocked');
         const result = await web3.eth.sendTransaction(transactionData);
-        console.log('get result');
+        console.log('<transfer> got result');
         await web3.eth.personal.lockAccount(fromAddr);
-        console.log('account lock');
+        console.log('<transfer> account re-locked');
         return result;
     }
 };

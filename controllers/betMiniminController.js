@@ -91,7 +91,7 @@ const controller = {
     getGameStatus: async (req, res) => {
         console.log('[betMiniminController][getGameStatus]');
 
-        const { awaiting = false } = req.params;
+        const { awaiting = false } = req.query;
 
         if (awaiting && pendingBets <= 0) {
             const result = {};
