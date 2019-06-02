@@ -1,66 +1,59 @@
-
-import contractUtil from '../utils/contractUtil';
+import contractUtil from '../utils/contract';
+import { FAIL, SUCCESS } from '../utils/constants';
 
 const controller = {
-	getAccountList: async (req, res, next) => {
-        console.log("[contractController][getAccountList]");
-        const result = {
-            status:'fail'
-        };
-		try {
-            const list = await contractUtil.getAccountList();
-            result['status'] = 'success';
-            result['data'] = list;
-            return res.json(result);
-        } catch (error) {
-            console.error(`error:${error})`);
-            return res.json(result);
-        }
-        // return res.status(status).json(data);
-
-	},
-	getAccountData: async (req, res, next) => {
-        console.log("[contractController][getAccountData]");
-        const result = {
-            status:'fail'
-        };
-        const { address } = req.params;
-        if (!address) {
-            return res.json();
-        }
+    getAccountList: async (_, res) => {
+        console.log('[contractController][getAccountList]');
+        const result = { status: FAIL };
         try {
-            const balance = await contractUtil.getBalance(address);
-            result['status'] = 'success';
-            result['balance'] = balance;
-            return res.json(result);
+            const list = await contractUtil.getAccountList();
+            result.status = SUCCESS;
+            result.data = list;
         } catch (error) {
-            console.error(`error:${error})`);
-            return res.json(result);
-		}
+            console.error(`error: ${error})`);
+        }
+        return res.json(result);
     },
-    transfer: async (req, res, next) => {
-        console.log("[contractController][transfer]");
+    getAccountData: async (req, res) => {
+        console.log('[contractController][getAccountData]');
+        const result = { status: FAIL };
+        const { address } = req.params;
+        if (address) {
+            try {
+                const balance = await contractUtil.getBalance(address);
+                result.status = SUCCESS;
+                result.balance = balance;
+            } catch (error) {
+                console.error(`error: ${error})`);
+            }
+        }
+        return res.json(result);
+    },
+    transfer: async (req, res) => {
+        console.log('[contractController][transfer]');
         const { address } = req.params;
         const { body } = req;
-        const result = {
-            status:'fail'
-        };
-        // console.log(body.password);
-        // console.log(body.toAddr);
-        // console.log(body.value);
-        if (!body.password || !body.toAddr || !body.value) {
-            return res.json(result);
+        const result = { status: FAIL };
+
+        if (
+            body.password !== undefined &&
+            body.toAddr !== undefined &&
+            body.value !== undefined
+        ) {
+            try {
+                const transaction = await contractUtil.transfer(
+                    address,
+                    body.password,
+                    body.toAddr,
+                    body.value
+                );
+                result.status = SUCCESS;
+                result.transaction = transaction;
+            } catch (error) {
+                console.error(`error: ${error})`);
+            }
         }
-       
-        try {
-            const transaction = await contractUtil.transfer(address,body.password,body.toAddr,body.value);
-            result['status'] = 'success';
-            result['transaction'] = transaction;
-            return res.json(result);
-        } catch (error) {
-            console.error(`error:${error})`);
-            return res.json(result);
-		}
+        return res.json(result);
     }
 };
 
