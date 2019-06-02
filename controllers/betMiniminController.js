@@ -1,41 +1,116 @@
+import kue from 'kue';
 import BetMinimun from '../utils/betMinimun';
 import { FAIL, SUCCESS } from '../utils/constants';
 
-const controller = {
-    getGameStatus: async (_, res) => {
-        console.log('[betMiniminController][getGameStatus]');
+const jobs = kue.createQueue();
 
-        const result = { status: FAIL };
-        try {
-            const contract = await BetMinimun.getBetMinimun();
-            const data = await BetMinimun.getGameData(contract);
-            if (!data) throw new Error('no data');
+let pendingBets = 0;
 
+let betData = {}; // [address]: data
+let playedMap = {};
+let amountMap = {};
+
+function newBetJob(params) {
+    const job = jobs.create('bet', params);
+    pendingBets++;
+    job.on('complete', res => {
+        betData[res.address] = res.data;
+        pendingBets--;
+    });
+    job.save();
+}
+
+function newDistributeJob(params) {
+    const job = jobs.create('distribute', params);
+    job.on('complete', () => {
+        betData = {};
+        playedMap = {};
+        amountMap = {};
+    });
+    job.save();
+}
+
+jobs.process('bet', async (job, done) => {
+    const { address, password, number, value } = job.data;
+
+    const result = { status: FAIL, address };
+
+    try {
+        const contract = await BetMinimun.getBetMinimun();
+        const played = await BetMinimun.checkPlayerExists(contract, address);
+
+        if (played) {
             result.status = SUCCESS;
-            result.gameData = data;
-        } catch (error) {
-            console.error(`error: ${error.message})`);
+            result.played = played;
+            console.log('(Has played) result:', result);
+            return done(null, { address, data: null });
         }
 
-        return res.json(result);
+        const transaction = await BetMinimun.bet(
+            contract,
+            address,
+            password,
+            number,
+            value
+        );
+
+        if (!transaction) throw new Error('No transaction');
+
+        result.status = SUCCESS;
+        result.data = transaction;
+    } catch (error) {
+        console.error(`error: ${error.message})`);
+        result.error = error;
+    }
+    return done(null, result);
+});
+
+jobs.process('distribute', async (job, done) => {
+    const { address, password } = job.data;
+
+    const result = { status: FAIL, address };
+    try {
+        const contract = await BetMinimun.getBetMinimun();
+        const transaction = await BetMinimun.distribute(
+            contract,
+            address,
+            password
+        );
+        if (!transaction) throw new Error('No transaction');
+
+        result.status = SUCCESS;
+        result.data = transaction;
+    } catch (error) {
+        result.error = error;
+        console.error(`error: ${error.message})`);
+    }
+    done(null, result);
+});
+
+const controller = {
+    getGameStatus: (_, res) => {
+        console.log('[betMiniminController][getGameStatus]');
+
+        const total = Object.values(amountMap).reduce(
+            (sum, amount) => sum + amount,
+            0
+        );
+        return res.json({
+            status: SUCCESS,
+            total,
+            processing: pendingBets > 0
+        });
     },
-    getBetStatus: async (req, res) => {
+
+    getBetStatus: (req, res) => {
         console.log('[betMiniminController][getBetStatus]');
 
         const { address } = req.params;
         const result = { status: FAIL };
         if (address) {
-            try {
-                const contract = await BetMinimun.getBetMinimun();
-                const played = await BetMinimun.checkPlayerExists(
-                    contract,
-                    address
-                );
-                result.status = SUCCESS;
-                result.played = played;
-            } catch (error) {
-                console.error(`error: ${error.message})`);
-            }
+            result.status = SUCCESS;
+            result.played = Boolean(playedMap[address]);
+            result.data = betData[address];
         }
         return res.json(result);
     },
@@ -51,60 +126,25 @@ const controller = {
             body.number !== undefined &&
             body.value !== undefined
         ) {
-            try {
-                const contract = await BetMinimun.getBetMinimun();
-                const played = await BetMinimun.checkPlayerExists(
-                    contract,
-                    address
-                );
-                console.log({ played });
-
-                if (played) {
-                    result.status = SUCCESS;
-                    result.played = played;
-                    console.log('(Has played) result:', result);
-                    return res.json({ test: '?' }); // what's this?
-                }
-
-                const transaction = await BetMinimun.bet(
-                    contract,
-                    address,
-                    body.password,
-                    body.number,
-                    body.value
-                );
-
-                if (!transaction) throw new Error('No transaction');
-
-                result.status = SUCCESS;
-                result.data = transaction;
-            } catch (error) {
-                console.error(`error: ${error.message})`);
-            }
+            playedMap[address] = true;
+            amountMap[address] = body.value;
+            newBetJob(Object.assign({}, body, { address }));
+            result.status = SUCCESS;
         }
         return res.json(result);
     },
+
     distribute: async (req, res) => {
         console.log('[betMiniminController][distribute]');
         const { address } = req.params;
-        const { body } = req;
+        const {
+            body: { password }
+        } = req;
         const result = { status: FAIL };
 
-        if (address && body.password !== undefined) {
-            try {
-                const contract = await BetMinimun.getBetMinimun();
-                const transaction = await BetMinimun.distribute(
-                    contract,
-                    address,
-                    body.password
-                );
-                if (!transaction) throw new Error('No transaction');
-
-                result.status = SUCCESS;
-                result.data = transaction;
-            } catch (error) {
-                console.error(`error: ${error.message})`);
-            }
+        if (address && password !== undefined) {
+            newDistributeJob({ address, password });
+            result.status = SUCCESS;
         }
         return res.json(result);
     }
