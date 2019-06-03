@@ -5,6 +5,7 @@ import { FAIL, SUCCESS } from '../utils/constants';
 const jobs = kue.createQueue();
 
 let pendingBets = 0;
+let pendingDistribute = 0;
 
 let betData = {}; // [address]: data
 let playedMap = {};
@@ -12,9 +13,10 @@ let amountMap = {};
 const gameRecords = [];
 
 function newBetJob(params) {
-    const job = jobs.create('bet', params);
+    const job = jobs.create('bet', params).priority('high');
     pendingBets++;
     job.on('complete', res => {
+        console.log(`[bet job] ${job.id} completed`);
         betData[res.address] = res.data;
         pendingBets--;
     });
@@ -24,10 +26,14 @@ function newBetJob(params) {
 
 function newDistributeJob(params) {
     const job = jobs.create('distribute', params);
-    job.on('complete', () => {
+    pendingDistribute++;
+    job.on('complete', res => {
+        console.log(`[distribute job] ${job.id} completed`);
         betData = {};
         playedMap = {};
         amountMap = {};
+        pendingDistribute--;
+        gameRecords.push(res.data);
     });
     job.save();
     return job.id;
@@ -81,8 +87,12 @@ jobs.process('distribute', async (job, done) => {
         );
         if (!transaction) throw new Error('No transaction');
 
+        const data = await BetMinimun.getGameData(contract);
+        console.log('[dis] game data:', data);
+
         result.status = SUCCESS;
-        result.data = transaction;
+        result.transaction = transaction;
+        result.data = data;
     } catch (error) {
         result.error = error;
         console.error(`error: ${error.message})`);
@@ -112,8 +122,6 @@ const controller = {
                 const data = await BetMinimun.getGameData(contract);
                 if (!data) throw new Error('no data');
 
-                gameRecords.push(data);
-
                 result.status = SUCCESS;
                 result.gameData = data;
             } catch (error) {
@@ -129,7 +137,8 @@ const controller = {
         return res.json({
             status: SUCCESS,
             total,
-            processing: pendingBets > 0
+            processing: pendingBets > 0,
+            ending: pendingDistribute > 0
         });
     },
 
@@ -158,7 +167,7 @@ const controller = {
             body.value !== undefined
         ) {
             playedMap[address] = true;
-            amountMap[address] = body.value;
+            amountMap[address] = +body.value;
             result.jobId = newBetJob(Object.assign({}, body, { address }));
             result.status = SUCCESS;
         }
