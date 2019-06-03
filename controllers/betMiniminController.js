@@ -19,6 +19,7 @@ function newBetJob(params) {
         pendingBets--;
     });
     job.save();
+    return job.id;
 }
 
 function newDistributeJob(params) {
@@ -29,6 +30,7 @@ function newDistributeJob(params) {
         amountMap = {};
     });
     job.save();
+    return job.id;
 }
 
 jobs.process('bet', async (job, done) => {
@@ -157,7 +159,7 @@ const controller = {
         ) {
             playedMap[address] = true;
             amountMap[address] = body.value;
-            newBetJob(Object.assign({}, body, { address }));
+            result.jobId = newBetJob(Object.assign({}, body, { address }));
             result.status = SUCCESS;
         }
         return res.json(result);
@@ -172,7 +174,7 @@ const controller = {
         const result = { status: FAIL };
 
         if (address && password !== undefined) {
-            newDistributeJob({ address, password });
+            result.jobId = newDistributeJob({ address, password });
             result.status = SUCCESS;
         }
         return res.json(result);
