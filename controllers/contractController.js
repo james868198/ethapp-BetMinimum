@@ -2,6 +2,18 @@ import contractUtil from '../utils/contract';
 import { FAIL, SUCCESS } from '../utils/constants';
 
 const controller = {
+    createAccount: async (_, res) => {
+        console.log('[contractController][createAccount]');
+        const result = { status: FAIL };
+        try {
+            const address = await contractUtil.createAccount();
+            result.status = SUCCESS;
+            result.address = address;
+        } catch (error) {
+            console.error(`error: ${error.message})`);
+        }
+        return res.json(result);
+    },
     getAccountList: async (_, res) => {
         console.log('[contractController][getAccountList]');
         const result = { status: FAIL };
@@ -22,7 +34,7 @@ const controller = {
             try {
                 const balance = await contractUtil.getBalance(address);
                 result.status = SUCCESS;
-                result.balance = balance;
+                result.balance = contractUtil.toMoney(balance);
             } catch (error) {
                 console.error(`error: ${error.message})`);
             }

@@ -5,8 +5,14 @@ const web3 = new Web3(Web3.givenProvider || ETHEREUM_URI, null, {});
 
 const GAS_LIMIT = 21000;
 const GAS_PRICE = 20000000000;
+const HARDCODE_PASSWORD = 'password';
 
 const contractUtil = {
+    toMoney: num => Math.round(num / 1e18),
+    createAccount: async _ => {
+        const address = await web3.eth.personal.newAccount(HARDCODE_PASSWORD);
+        return address;
+    },
     getBalance: async acountAddr => {
         if (!acountAddr) {
             return;
