@@ -6,9 +6,9 @@ const controller = {
         console.log('[contractController][createAccount]');
         const result = { status: FAIL };
         try {
-            const address = await contractUtil.createAccount();
+            const account = await contractUtil.createAccount();
             result.status = SUCCESS;
-            result.address = address;
+            result.account = account;
         } catch (error) {
             console.error(`error: ${error.message})`);
         }
