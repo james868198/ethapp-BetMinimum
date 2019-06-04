@@ -3,7 +3,7 @@ export const SUCCESS = 'success';
 
 // AWS
 export const ETHEREUM_URI = 'http://18.221.124.20:8545';
-export const CONTRACT_ADDR = '0x5c1efb1fa28ec86096c2839f0397aa73144fffd5';
+export const CONTRACT_ADDR = '0xf33533f9ac96ac0735cda64865d51af5028c857c';
 
 // AZure
 // export const ETHEREUM_URI = 'http://13.66.194.234:8545';
