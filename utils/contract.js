@@ -10,9 +10,10 @@ const HARDCODE_PASSWORD = 'password';
 const contractUtil = {
     toMoney: num => Math.round(num / 1e18),
     createAccount: async _ => {
-        // const address = await web3.eth.personal.newAccount(HARDCODE_PASSWORD);
-        const { address, privateKey } = await web3.eth.accounts.create();
-        return { address, privateKey };
+        const address = await web3.eth.personal.newAccount(HARDCODE_PASSWORD);
+        // const { address, privateKey } = await web3.eth.accounts.create();
+        // return { address, privateKey };
+        return address;
     },
     getBalance: async acountAddr => {
         if (!acountAddr) {
